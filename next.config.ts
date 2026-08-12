@@ -14,3 +14,8 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// Habilita bindings/vars de Cloudflare (wrangler.jsonc, .dev.vars) en
+// `next dev`. No afecta al build/deploy real, solo al dev server.
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
+initOpenNextCloudflareForDev();
