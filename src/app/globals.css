@@ -1,0 +1,91 @@
+@import "tailwindcss";
+
+/* Gym Cristiano App — tema "gym rat" futurista con toques americana
+   old-school: base casi negra, acentos neón (azul/dorado) y un rojo
+   "USA" reservado a detalles puntuales (nunca fondos grandes). */
+@theme inline {
+  --color-ink: #0a0e12;
+  --color-surface: #12181f;
+  --color-surface-2: #171f27;
+  --color-line: #2a323c;
+  --color-cream: #f4ebd9;
+  --color-cream-dim: #b9af9c;
+  --color-usa-red: #b3242a;
+  --color-usa-red-dim: #7a1a1f;
+  --color-neon-blue: #00e5ff;
+  --color-neon-gold: #ffc72c;
+
+  --font-sans: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-anton), ui-sans-serif, sans-serif;
+  --font-counter: var(--font-bebas), ui-sans-serif, sans-serif;
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, monospace;
+
+  --shadow-neon: 0 0 0 1px rgba(0, 229, 255, 0.5), 0 0 22px rgba(0, 229, 255, 0.35);
+  --shadow-neon-gold: 0 0 0 1px rgba(255, 199, 44, 0.55), 0 0 22px rgba(255, 199, 44, 0.3);
+  --shadow-card: 0 10px 35px rgba(0, 0, 0, 0.5);
+}
+
+body {
+  background:
+    radial-gradient(circle at 15% -10%, rgba(0, 229, 44, 0), transparent 45%),
+    radial-gradient(circle at 85% 0%, rgba(0, 229, 255, 0.07), transparent 45%),
+    var(--color-ink);
+}
+
+::selection {
+  background: var(--color-neon-blue);
+  color: var(--color-ink);
+}
+
+* {
+  scrollbar-color: var(--color-line) var(--color-ink);
+}
+
+/* Scanlines sutiles: solo para login y headers de sección, no en toda la app. */
+.bg-scanlines {
+  background-image: repeating-linear-gradient(
+    to bottom,
+    rgba(244, 235, 217, 0.05) 0px,
+    rgba(244, 235, 217, 0.05) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+
+/* Textura de grano vintage sobre el fondo base. */
+.bg-grain {
+  position: relative;
+  isolation: isolate;
+}
+.bg-grain::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("/textures/grain.svg");
+  background-size: 220px 220px;
+  opacity: 0.05;
+  mix-blend-mode: overlay;
+  pointer-events: none;
+  z-index: 0;
+}
+.bg-grain > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Franja diagonal roja/crema tipo bandera: acento puntual, nunca fondo completo. */
+.stripe-usa {
+  background: repeating-linear-gradient(
+    -45deg,
+    var(--color-usa-red) 0px,
+    var(--color-usa-red) 10px,
+    var(--color-cream) 10px,
+    var(--color-cream) 12px
+  );
+}
+
+.text-outline-neon {
+  text-shadow:
+    0 0 8px rgba(0, 229, 255, 0.55),
+    0 0 22px rgba(0, 229, 255, 0.25);
+}
