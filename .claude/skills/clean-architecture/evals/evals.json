@@ -1,0 +1,36 @@
+{
+  "skill_name": "clean-architecture",
+  "evals": [
+    {
+      "id": 0,
+      "name": "restructure-bookings-route",
+      "prompt": "este route handler de reservas de clases ya tiene 100 lineas y cada vez que tocamos algo se rompe otra cosa. Ademas no lo puedo testear sin levantar la base y stripe. Como lo reorganizo? te paso el archivo (app/api/bookings/route.ts)",
+      "expected_output": "Diagnosis first, then business rules (capacity, weekly limit, pricing) extracted into pure testable functions, a use-case layer, a thin handler, input validation at the boundary, and ordered migration steps.",
+      "files": ["bookings-route.ts"],
+      "assertions": [
+        "A diagnosis of the current problems precedes the proposed structure",
+        "Capacity, weekly-limit and pricing rules become functions that take data as arguments with no db or stripe calls inside",
+        "The route handler is reduced to parse input, call a use case, shape the response",
+        "The request body is validated with a schema at the boundary",
+        "Dependencies (db, stripe, email, clock) are passed in rather than imported inside the use case",
+        "Migration steps are ordered and each keeps the app shippable",
+        "The current time is not read via new Date() inside the extracted rules"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "scaffold-gym-app-structure",
+      "prompt": "arranco de cero una app para administrar el gimnasio: socios, cuotas, reservas de clases y control de acceso. Next.js 15 con app router, typescript y postgres. Como organizo las carpetas para que no se me haga un quilombo en 6 meses? somos 2 devs",
+      "expected_output": "Feature-first structure with a shared layer, explicit dependency direction, per-feature public index.ts, boundary validation, and an explicit warning against over-abstracting for a 2-dev project.",
+      "files": [],
+      "assertions": [
+        "Proposes feature-first folders rather than top-level components/hooks/services buckets",
+        "Each feature exposes a public index.ts contract",
+        "States the dependency direction explicitly",
+        "Warns against over-abstraction given a 2-dev team",
+        "Addresses the client/server boundary for the Next.js app router",
+        "Names a mechanical way to enforce module boundaries (lint rule or equivalent)"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "skill_name": "ui-design-quality",
+  "evals": [
+    {
+      "id": 0,
+      "name": "redesign-member-dashboard",
+      "prompt": "che este dashboard de socios quedo horrible, parece hecho por un programador jaja. Es el MemberDashboard.tsx que te paso. Podes dejarlo mas profesional? usamos tailwind en el proyecto. Ah y ojo que la lista puede tener 200 socios",
+      "expected_output": "Rewritten component with a real spacing/type scale, one primary action, restrained color (no purple/pink gradient, no emoji in the heading), table or list layout suited to 200 rows, and hover/focus/loading/empty states.",
+      "files": ["member-dashboard.tsx"],
+      "assertions": [
+        "The purple-to-pink gradient is gone from the output",
+        "No emoji is used in the heading or as an interface icon",
+        "Spacing uses scale classes rather than arbitrary values (no p-[13px]-style one-offs)",
+        "Exactly one visually primary action button in the header region",
+        "Interactive elements define a visible focus-visible style",
+        "The empty state (no members or no search results) is handled explicitly",
+        "Layout suits ~200 rows: a table or dense list rather than one large card per member",
+        "Body text is not pure #000 on pure #fff"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "build-checkin-screen",
+      "prompt": "necesito armar la pantalla de check-in que va en una tablet en la entrada del gimnasio. El socio pone su codigo de 6 digitos y le tiene que aparecer si entro bien o si tiene la cuota vencida. React + tailwind. Que se vea bien porque lo van a ver los socios todo el dia",
+      "expected_output": "New component with clear hierarchy for the single primary task, large touch targets, high contrast for at-a-distance reading, and explicit success/error/loading/idle states.",
+      "files": [],
+      "assertions": [
+        "One dominant primary element for entering the 6-digit code",
+        "Touch targets are at least 44px",
+        "Success and expired-membership states are distinguished by more than color alone",
+        "A submitting/loading state prevents double submission",
+        "Font sizes come from a small consistent type scale",
+        "An idle/ready state is defined for the always-on screen"
+      ]
+    }
+  ]
+}
