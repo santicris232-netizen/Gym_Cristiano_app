@@ -1,0 +1,14 @@
+# --- backend (Python / FastAPI) ---
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.db
+backend/*.db-journal
+backend/.env
+*.pyc
+
+# frontend/ has its own .gitignore (node_modules, dist, etc.)
+
+# --- misc ---
+.DS_Store
+*.log
