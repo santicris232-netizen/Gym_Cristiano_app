@@ -1,55 +1,14 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# --- backend (Python / FastAPI) ---
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/*.db
+backend/*.db-journal
+backend/.env
+*.pyc
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# frontend/ has its own .gitignore (node_modules, dist, etc.)
 
-# testing
-/coverage
-
-# next.js
-/.next/
-/out/
-
-# production
-/build
-
-# misc
+# --- misc ---
 .DS_Store
-*.pem
-
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.pnpm-debug.log*
-
-# env files (can opt-in for committing if needed)
-.env*
-!.env.example
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-/src/generated/prisma
-
-# sqlite database (leftover from local-only dev, no longer used — db is Postgres/Neon now)
-*.db
-*.db-journal
-
-# cloudflare / opennext build output and local secrets
-/.open-next/
-/.wrangler/
-.dev.vars
-.dev.vars.*
-cloudflare-env.d.ts
+*.log
