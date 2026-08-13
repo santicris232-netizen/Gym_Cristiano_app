@@ -1,13 +1,16 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { PrismaClient } from "../src/generated/prisma/client";
-import { PrismaNeon } from "@prisma/adapter-neon";
+import { PrismaNeonHTTP } from "@prisma/adapter-neon";
 import { hashPassword } from "../src/lib/auth";
 import { todayDateKey } from "../src/lib/constants";
 
-const adapter = new PrismaNeon({
-  connectionString: process.env.DATABASE_URL,
-});
+// El seed usa el adapter HTTP (fetch puro, sin WebSocket) a propósito:
+// corre desde entornos locales/CI que a veces no permiten salida
+// WebSocket (solo HTTPS), y no necesita transacciones interactivas.
+// La app en runtime (src/lib/prisma.ts) usa el pool WS (PrismaNeon)
+// porque Cloudflare Workers sí lo soporta nativamente.
+const adapter = new PrismaNeonHTTP(process.env.DATABASE_URL ?? "", {});
 const prisma = new PrismaClient({ adapter });
 
 type SeedExercise = {
@@ -94,45 +97,65 @@ function addDays(base: Date, days: number): Date {
   return d;
 }
 
+// El adapter HTTP (ver arriba) no soporta las transacciones internas
+// que Prisma usa para `upsert()` en algunos modelos (falla con
+// "Transactions are not supported in HTTP mode"). Todos los `update`
+// de este seed son no-op de cualquier forma (solo nos interesa
+// idempotencia al re-ejecutar), así que reemplazamos upsert por un
+// find-o-create simple, que sí es un statement único.
+async function findOrCreate<T>(
+  find: () => Promise<T | null>,
+  create: () => Promise<T>,
+): Promise<T> {
+  const existing = await find();
+  return existing ?? create();
+}
+
 async function seedUsersAndPlan() {
   const trainerPassword = await hashPassword("Entrenador123!");
-  const trainer = await prisma.user.upsert({
-    where: { email: "trainer@gymcristiano.app" },
-    create: {
-      email: "trainer@gymcristiano.app",
-      name: "Coach Cristiano",
-      passwordHash: trainerPassword,
-      role: "TRAINER",
-    },
-    update: {},
-  });
+  const trainer = await findOrCreate(
+    () => prisma.user.findUnique({ where: { email: "trainer@gymcristiano.app" } }),
+    () =>
+      prisma.user.create({
+        data: {
+          email: "trainer@gymcristiano.app",
+          name: "Coach Cristiano",
+          passwordHash: trainerPassword,
+          role: "TRAINER",
+        },
+      }),
+  );
   console.log(`Entrenador demo: ${trainer.email} / Entrenador123!`);
 
   const alumno1Password = await hashPassword("Alumno123!");
-  const alumno1 = await prisma.user.upsert({
-    where: { email: "alumno1@gymcristiano.app" },
-    create: {
-      email: "alumno1@gymcristiano.app",
-      name: "Marco Torres",
-      passwordHash: alumno1Password,
-      role: "USER",
-      weightUnit: "KG",
-    },
-    update: {},
-  });
+  const alumno1 = await findOrCreate(
+    () => prisma.user.findUnique({ where: { email: "alumno1@gymcristiano.app" } }),
+    () =>
+      prisma.user.create({
+        data: {
+          email: "alumno1@gymcristiano.app",
+          name: "Marco Torres",
+          passwordHash: alumno1Password,
+          role: "USER",
+          weightUnit: "KG",
+        },
+      }),
+  );
 
   const alumno2Password = await hashPassword("Alumno123!");
-  const alumno2 = await prisma.user.upsert({
-    where: { email: "alumno2@gymcristiano.app" },
-    create: {
-      email: "alumno2@gymcristiano.app",
-      name: "Laura Gómez",
-      passwordHash: alumno2Password,
-      role: "USER",
-      weightUnit: "LB",
-    },
-    update: {},
-  });
+  const alumno2 = await findOrCreate(
+    () => prisma.user.findUnique({ where: { email: "alumno2@gymcristiano.app" } }),
+    () =>
+      prisma.user.create({
+        data: {
+          email: "alumno2@gymcristiano.app",
+          name: "Laura Gómez",
+          passwordHash: alumno2Password,
+          role: "USER",
+          weightUnit: "LB",
+        },
+      }),
+  );
   console.log(
     `Alumnos demo: ${alumno1.email} / Alumno123!  y  ${alumno2.email} / Alumno123!`,
   );
@@ -192,17 +215,22 @@ async function seedUsersAndPlan() {
       const date = addDays(today, -daysBack);
       const dateKey = todayDateKey(date);
 
-      const session = await prisma.workoutSession.upsert({
-        where: { userId_dateKey: { userId: alumno1.id, dateKey } },
-        create: {
-          userId: alumno1.id,
-          dayOfWeek: day.dayOfWeek,
-          dateKey,
-          date,
-          completed: true,
-        },
-        update: {},
-      });
+      const session = await findOrCreate(
+        () =>
+          prisma.workoutSession.findUnique({
+            where: { userId_dateKey: { userId: alumno1.id, dateKey } },
+          }),
+        () =>
+          prisma.workoutSession.create({
+            data: {
+              userId: alumno1.id,
+              dayOfWeek: day.dayOfWeek,
+              dateKey,
+              date,
+              completed: true,
+            },
+          }),
+      );
 
       for (const exercise of day.exercises) {
         if (!(exercise.id in baseWeights)) {
@@ -213,23 +241,28 @@ async function seedUsersAndPlan() {
         const weightKg = baseWeights[exercise.id] + weekIndex * 2.5;
 
         for (let setNumber = 1; setNumber <= 4; setNumber++) {
-          await prisma.setLog.upsert({
-            where: {
-              sessionId_exerciseId_setNumber: {
-                sessionId: session.id,
-                exerciseId: exercise.id,
-                setNumber,
-              },
-            },
-            create: {
-              sessionId: session.id,
-              exerciseId: exercise.id,
-              setNumber,
-              weightKg,
-              reps: 10,
-            },
-            update: {},
-          });
+          await findOrCreate(
+            () =>
+              prisma.setLog.findUnique({
+                where: {
+                  sessionId_exerciseId_setNumber: {
+                    sessionId: session.id,
+                    exerciseId: exercise.id,
+                    setNumber,
+                  },
+                },
+              }),
+            () =>
+              prisma.setLog.create({
+                data: {
+                  sessionId: session.id,
+                  exerciseId: exercise.id,
+                  setNumber,
+                  weightKg,
+                  reps: 10,
+                },
+              }),
+          );
         }
       }
     }
