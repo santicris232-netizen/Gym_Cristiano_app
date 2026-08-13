@@ -41,10 +41,15 @@ export function ProgressChart({
   useEffect(() => {
     if (!exerciseId) return;
     let active = true;
+    // Reseteamos el error al arrancar: si no, un fetch exitoso después de
+    // uno fallido podía dejar el mensaje de error viejo pisando el gráfico.
+    setPointsError(null);
     api
       .get<ProgressPointOut[]>(`/users/${userId}/progress/${exerciseId}`)
       .then((data) => {
-        if (active) setPoints(data);
+        if (!active) return;
+        setPoints(data);
+        setPointsError(null);
       })
       .catch((err) => {
         if (!active) return;

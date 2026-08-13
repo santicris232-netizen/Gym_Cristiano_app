@@ -19,10 +19,16 @@ export function ProgressPanel({
 
   useEffect(() => {
     let active = true;
+    // Reseteamos al arrancar: si no, al cambiar de alumno se puede ver
+    // por un instante el historial (o el error) del alumno anterior.
+    setSessions(null);
+    setSessionsError(null);
     api
       .get<SessionSummaryOut[]>(`/users/${userId}/sessions`)
       .then((data) => {
-        if (active) setSessions(data);
+        if (!active) return;
+        setSessions(data);
+        setSessionsError(null);
       })
       .catch((err) => {
         if (!active) return;

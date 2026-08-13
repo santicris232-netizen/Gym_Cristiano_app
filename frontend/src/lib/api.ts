@@ -24,11 +24,13 @@ async function extractErrorMessage(res: Response): Promise<string> {
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     credentials: "include",
+    ...options,
+    // Va después de "...options": si no, el "headers" de arriba lo pisa
+    // por completo y se pierde el Content-Type por defecto.
     headers: {
       ...(options.body ? { "Content-Type": "application/json" } : {}),
       ...options.headers,
     },
-    ...options,
   });
 
   if (!res.ok) {
