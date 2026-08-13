@@ -57,6 +57,8 @@ export function AddUserForm({ onCreated }: { onCreated: (user: UserPublic) => vo
           <Label htmlFor="new-password">Contraseña inicial</Label>
           <Input
             id="new-password"
+            type="password"
+            autoComplete="new-password"
             required
             minLength={8}
             value={password}

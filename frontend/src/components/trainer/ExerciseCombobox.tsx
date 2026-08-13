@@ -48,7 +48,9 @@ export function ExerciseCombobox({
       if (bodyPart) params.set("body_part", bodyPart);
 
       api
-        .get<ExerciseListResponse>(`/exercises?${params.toString()}`)
+        .get<ExerciseListResponse>(`/exercises?${params.toString()}`, {
+          signal: controller.signal,
+        })
         .then((data) => {
           setItems(data.items);
           setTotal(data.total);
@@ -57,10 +59,17 @@ export function ExerciseCombobox({
           // búsqueda cancelada u otro error transitorio — el próximo
           // tipeo dispara una nueva request
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          // Si esta request fue abortada, el "loading" ya lo está
+          // manejando la request nueva que la reemplazó — no pisarlo.
+          if (!controller.signal.aborted) setLoading(false);
+        });
     }, 300);
 
-    return () => clearTimeout(handle);
+    return () => {
+      clearTimeout(handle);
+      abortRef.current?.abort();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, bodyPart, page]);
 
