@@ -1,0 +1,35 @@
+{
+  "skill_name": "functional-typescript",
+  "evals": [
+    {
+      "id": 0,
+      "name": "untangle-checkin-panel-state",
+      "prompt": "este componente tiene como 10 useState y 4 useEffect y a veces muestra el spinner arriba de la lista vieja, o queda el cartel de error cuando ya cargo bien. Lo podes dejar mas prolijo y que no se rompa? CheckInPanel.tsx",
+      "expected_output": "Boolean soup replaced by a discriminated union on status, derived values computed during render instead of in effects, the array mutation via push fixed, and exhaustive handling of the states.",
+      "files": ["check-in-panel.tsx"],
+      "assertions": [
+        "Boolean flags are replaced by a discriminated union with a status field",
+        "Derived values (count, todayCount, isEmpty) are computed during render rather than in useEffect",
+        "The checkIns.push mutation is replaced by creating a new array",
+        "At most one useEffect remains",
+        "The status variants are handled exhaustively",
+        "The stale-error case named by the user can no longer be represented"
+      ]
+    },
+    {
+      "id": 1,
+      "name": "pure-core-membership-service",
+      "prompt": "quiero poder testear la logica de upgrade de membresia sin base de datos, hoy tengo que mockear todo. Y los errores son todos `throw new Error('...')` asi que arriba en el route termino haciendo if con el mensaje del error, medio asqueroso. Como lo encaro? membership-service.ts",
+      "expected_output": "Pricing/proration logic extracted into pure functions with time injected, mutation of the loaded entity replaced by returning new values, and a typed Result with a discriminated error union replacing thrown strings.",
+      "files": ["membership-service.ts"],
+      "assertions": [
+        "Proration and pricing logic are extracted into pure functions",
+        "The current time is injected as a parameter instead of calling new Date() inside the logic",
+        "The loaded membership object is no longer mutated in place",
+        "Errors are returned as a typed Result with a discriminated error union instead of thrown Error strings",
+        "A test is shown that exercises the logic without a database",
+        "The caller distinguishes error cases by a tag rather than by matching a message string"
+      ]
+    }
+  ]
+}
