@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { WEIGHT_UNIT_OPTIONS } from "../../lib/units";
-import { api } from "../../lib/api";
+import { api, ApiError } from "../../lib/api";
 import { useAuth } from "../../context/AuthContext";
 import type { UserPublic, WeightUnit } from "../../types";
 
@@ -9,17 +9,24 @@ export function WeightUnitToggle({ initialUnit }: { initialUnit: WeightUnit }) {
   const [unit, setUnit] = useState<WeightUnit>(initialUnit);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleChange(next: WeightUnit) {
     if (next === unit) return;
+    const previous = unit;
+    // Optimista: si el PATCH falla, se revierte más abajo.
     setUnit(next);
     setSaving(true);
     setSaved(false);
+    setError(null);
     try {
       const updated = await api.patch<UserPublic>("/me/weight-unit", { weight_unit: next });
       setUser(updated);
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      setUnit(previous);
+      setError(err instanceof ApiError ? err.message : "No se pudo guardar. Intenta de nuevo.");
     } finally {
       setSaving(false);
     }
@@ -45,6 +52,7 @@ export function WeightUnitToggle({ initialUnit }: { initialUnit: WeightUnit }) {
       </div>
       {saving && <p className="mt-2 text-xs text-cream-dim">Guardando...</p>}
       {saved && <p className="mt-2 text-xs text-neon-gold">Preferencia guardada.</p>}
+      {error && <p className="mt-2 text-xs text-usa-red">{error}</p>}
     </div>
   );
 }

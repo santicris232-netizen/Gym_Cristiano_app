@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { formatWeight } from "../../lib/units";
-import { api } from "../../lib/api";
+import { api, ApiError } from "../../lib/api";
 import type { ProgressPointOut, WeightUnit } from "../../types";
 
 /** Solo necesitamos id+nombre para el selector — así ProgressPanel puede
@@ -30,18 +30,34 @@ export function ProgressChart({
 }) {
   const [exerciseId, setExerciseId] = useState(exercises[0]?.id ?? "");
   const [points, setPoints] = useState<ProgressPointOut[] | null>(null);
+  const [pointsError, setPointsError] = useState<string | null>(null);
 
   function handleExerciseChange(id: string) {
     setExerciseId(id);
     setPoints(null);
+    setPointsError(null);
   }
 
   useEffect(() => {
     if (!exerciseId) return;
     let active = true;
-    api.get<ProgressPointOut[]>(`/users/${userId}/progress/${exerciseId}`).then((data) => {
-      if (active) setPoints(data);
-    });
+    // Reseteamos el error al arrancar: si no, un fetch exitoso después de
+    // uno fallido podía dejar el mensaje de error viejo pisando el gráfico.
+    setPointsError(null);
+    api
+      .get<ProgressPointOut[]>(`/users/${userId}/progress/${exerciseId}`)
+      .then((data) => {
+        if (!active) return;
+        setPoints(data);
+        setPointsError(null);
+      })
+      .catch((err) => {
+        if (!active) return;
+        // Sin esto, un error acá dejaba "points" en null para siempre
+        // y el gráfico quedaba en "Cargando..." indefinidamente.
+        setPoints([]);
+        setPointsError(err instanceof ApiError ? err.message : "No se pudo cargar el progreso.");
+      });
     return () => {
       active = false;
     };
@@ -106,7 +122,7 @@ export function ProgressChart({
           </div>
         ) : points.length === 0 ? (
           <div className="flex h-[220px] items-center justify-center text-center text-sm text-cream-dim">
-            Sin registros todavía para este ejercicio.
+            {pointsError ?? "Sin registros todavía para este ejercicio."}
           </div>
         ) : chart ? (
           <svg

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { ProgressTable } from "./ProgressTable";
 import { ProgressChart, type ProgressExerciseOption } from "./ProgressChart";
 import { Spinner } from "../ui/Spinner";
-import { api } from "../../lib/api";
+import { api, ApiError } from "../../lib/api";
 import type { PlanDayOut, SessionSummaryOut, WeightUnit } from "../../types";
 
 export function ProgressPanel({
@@ -15,12 +15,28 @@ export function ProgressPanel({
   planDays: PlanDayOut[];
 }) {
   const [sessions, setSessions] = useState<SessionSummaryOut[] | null>(null);
+  const [sessionsError, setSessionsError] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
-    api.get<SessionSummaryOut[]>(`/users/${userId}/sessions`).then((data) => {
-      if (active) setSessions(data);
-    });
+    // Reseteamos al arrancar: si no, al cambiar de alumno se puede ver
+    // por un instante el historial (o el error) del alumno anterior.
+    setSessions(null);
+    setSessionsError(null);
+    api
+      .get<SessionSummaryOut[]>(`/users/${userId}/sessions`)
+      .then((data) => {
+        if (!active) return;
+        setSessions(data);
+        setSessionsError(null);
+      })
+      .catch((err) => {
+        if (!active) return;
+        // Sin esto, un error acá dejaba "sessions" en null para siempre
+        // y el panel quedaba con el spinner girando indefinidamente.
+        setSessions([]);
+        setSessionsError(err instanceof ApiError ? err.message : "No se pudo cargar el historial.");
+      });
     return () => {
       active = false;
     };
@@ -37,7 +53,7 @@ export function ProgressPanel({
   if (sessions.length === 0) {
     return (
       <p className="rounded-lg border border-dashed border-line p-8 text-center text-sm text-cream-dim">
-        Este alumno todavía no registró ningún entrenamiento.
+        {sessionsError ?? "Este alumno todavía no registró ningún entrenamiento."}
       </p>
     );
   }
